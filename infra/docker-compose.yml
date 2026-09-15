@@ -1,0 +1,34 @@
+# ShareTrip — статический сайт под Docker.
+#
+# Для домашнего сервера (Jonsbo) и для любой машины с Docker:
+#     docker compose -f infra/docker-compose.yml up -d
+#     открыть http://<адрес-сервера>:8080
+#
+# На ОБЩЕМ VPS этот файл не нужен: там уже работает Caddy на :8443 с одним
+# общим Caddyfile, и поднимать второй веб-сервер значит тратить память впустую.
+# Порядок для VPS — infra/deploy-vps.sh и docs/deploy.md.
+services:
+  sharetrip:
+    image: caddy:2.10-alpine
+    container_name: sharetrip
+    restart: unless-stopped
+    ports:
+      # Слева — порт на хосте. Меняйте его, если 8080 занят.
+      - "8080:8080"
+    volumes:
+      - ../web:/srv/sharetrip:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - sharetrip-caddy-data:/data
+      - sharetrip-caddy-config:/config
+    # Сайт статический: 64 МБ хватает с запасом.
+    mem_limit: 64m
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  sharetrip-caddy-data:
+  sharetrip-caddy-config:

@@ -76,6 +76,22 @@ file and is the reason nobody has to do it by hand.
 
 **Entry points:** `node --test "tests/*.test.mjs"`
 
+## Запуск и выкладка
+
+Один каталог `web/` едет в три места без изменений: сборки нет (D-009), поэтому «выложить» —
+это положить файлы туда, откуда их отдаёт веб-сервер. Подробности — [deploy.md](deploy.md).
+
+| Path | Purpose |
+|---|---|
+| `infra/serve.mjs` | Статический сервер на стандартной библиотеке Node, ноль зависимостей. Нужен потому, что `file://` запрещает ES-модули и IndexedDB. `--host 0.0.0.0` открывает доступ из домашней сети. Закрывает выход за пределы `web/`. |
+| `infra/serve.cmd` · `infra/serve-lan.cmd` | Запуск на Windows двойным кликом. Переключают консоль в UTF-8 (`chcp 65001`), иначе `cmd.exe` рисует кириллицу кракозябрами. |
+| `infra/docker-compose.yml` · `infra/Caddyfile` | Контейнер с Caddy для домашнего сервера. Каталог `web/` подключён томом только для чтения, поэтому обновление — это `restart`, а не пересборка. Лимит 64 МБ. |
+| `infra/caddy-sharetrip.caddy` | Шаблон блока для ОБЩЕГО Caddyfile на VPS, с токенами `{{HOST}}` и `{{ROOT}}`. |
+| `infra/deploy-vps.sh` | Выкладка на VPS: тесты → коды соседей до → `rsync` → замена только своего блока между маркерами → `validate`/`chown`/`reload` → коды соседей после. Ни разу не выполнялся; проверен только `bash -n`. |
+| `infra/deploy.env.example` | Образец настроек. Сам `deploy.env` в git не попадает: адреса — настройка, а не текст репозитория. |
+
+**Entry points:** `infra\serve.cmd` (Windows) · `docker compose -f infra/docker-compose.yml up -d` · `./infra/deploy-vps.sh --dry-run`
+
 ## Инструменты вики
 
 | Path | Purpose |

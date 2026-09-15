@@ -1,0 +1,24 @@
+# Блок ShareTrip для ОБЩЕГО Caddyfile на VPS.
+#
+# Токены {{HOST}} и {{ROOT}} подставляет infra/deploy-vps.sh. Блок дописывается
+# между маркерами BEGIN/END и заменяется только целиком — остальные сайты в
+# файле не трогаются никогда.
+{{HOST}}:8443 {
+	root * {{ROOT}}
+	file_server
+	encode zstd gzip
+
+	import /etc/caddy/vps-monitor-access-log.caddy
+
+	header {
+		Cache-Control "no-cache"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "same-origin"
+		-Server
+	}
+
+	# Данные живут в браузере, поэтому service worker обязан обновляться сразу,
+	# иначе человек останется на старой версии и не поймёт почему.
+	@sw path /sw.js
+	header @sw Cache-Control "no-store"
+}

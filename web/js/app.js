@@ -3,7 +3,7 @@
 
 import * as store from './store.js';
 import { storageAvailable } from './db.js';
-import { h, mount, clear, icon, toast, field, segmented, sheet } from './ui.js';
+import { h, mount, clear, icon, toast, field, segmented, sheet, wordmark } from './ui.js';
 import { CURRENCY_OPTIONS } from './currencies.js';
 import { todayISO } from './model.js';
 import { renderExpenses, openExpenseSheet } from './views/expenses.js';
@@ -53,7 +53,7 @@ function renderTopbar(state) {
   const sub = [state.trip.startDate && formatRange(state.trip), `${state.trip.homeCurrency}`]
     .filter(Boolean).join(' · ');
   return h('header.topbar', null,
-    h('img.topbar__logo', { src: 'assets/symbol.png', alt: '', width: 30, height: 30 }),
+    h('img.topbar__logo', { src: 'assets/symbol.png', alt: 'ShareTrip', width: 30, height: 30 }),
     h('div.topbar__title', null,
       h('b', null, state.trip.name),
       h('small', null, sub)),
@@ -88,7 +88,7 @@ export function goTab(id) {
 
 function renderWelcome() {
   return h('div.splash', null,
-    h('img', { src: 'assets/logo-horizontal.png', alt: 'ShareTrip' }),
+    wordmark(40),
     h('p', null, 'Путешествуем вместе. Считаем просто.'),
     h('p.small.muted', null,
       'Мультивалютные счета, ручной курс, замороженный в момент траты, и прямой ответ на вопрос «кто кому должен». Всё считается на устройстве — сеть не нужна.'),

@@ -92,6 +92,43 @@ export function icon(name, size = 23) {
   return svg;
 }
 
+/**
+ * Словесный знак ShareTrip.
+ *
+ * Именно текстом, а не картинкой: в логотипе бренда «Share» набрано тёмно-синим,
+ * и на тёмной теме оно сливалось с фоном до нечитаемости. Текст берёт цвет из
+ * токенов и потому верен в обеих темах, а заодно остаётся резким на любом
+ * экране. Веб-шрифт сознательно не подключается: приложение обязано работать
+ * без сети (D-004), а молча подставленный запасной шрифт — это худший вариант,
+ * чем честный системный.
+ */
+export function wordmark(size = 34) {
+  return h('span.wordmark', {
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: `${Math.round(size * 0.24)}px`,
+    },
+    'aria-label': 'ShareTrip',
+  },
+  h('img', {
+    src: 'assets/symbol.png', alt: '', width: Math.round(size * 1.15), height: Math.round(size * 1.15),
+    style: { display: 'block' },
+  }),
+  h('span', {
+    'aria-hidden': 'true',
+    style: {
+      fontSize: `${size}px`,
+      fontWeight: '800',
+      letterSpacing: '-.025em',
+      lineHeight: '1',
+      whiteSpace: 'nowrap',
+    },
+  },
+  h('span', { style: { color: 'var(--fg)' } }, 'Share'),
+  h('span', { style: { color: 'var(--teal)' } }, 'Trip')));
+}
+
 /* -------------------------------------------------------------- шторка */
 
 let openSheets = 0;

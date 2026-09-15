@@ -438,7 +438,16 @@ button { cursor: pointer; }
   align-items: center; justify-content: center; gap: 18px;
   padding: 24px; text-align: center;
 }
-.splash img { width: min(260px, 70vw); }
+.splash img { max-width: 100%; }
+
+/* Словесный знак на заставке до загрузки скриптов: те же правила, что и в ui.js —
+   «Share» берёт цвет текста темы, «Trip» — фирменный зелёный. */
+.wordmark-boot { display: inline-flex; align-items: center; gap: 10px; }
+.wordmark-boot > span {
+  font-size: 40px; font-weight: 800; letter-spacing: -.025em; line-height: 1;
+}
+.wordmark-boot b { color: var(--fg); font-weight: 800; }
+.wordmark-boot i { color: var(--teal); font-style: normal; font-weight: 800; }
 .splash p { color: var(--fg-muted); max-width: 34ch; }
 
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }

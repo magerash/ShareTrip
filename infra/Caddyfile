@@ -1,0 +1,30 @@
+# Caddyfile для контейнера из infra/docker-compose.yml.
+# Это ТОЛЬКО для домашнего сервера. Блок для общего VPS — caddy-sharetrip.caddy.
+{
+	admin off
+	auto_https off
+}
+
+:8080 {
+	root * /srv/sharetrip
+	file_server
+	encode zstd gzip
+
+	# Приложение — набор ES-модулей без сборки, поэтому имена файлов постоянные.
+	# Короткий кэш: обновление подхватывается сразу, а повторные заходы быстрые.
+	header {
+		Cache-Control "no-cache"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "same-origin"
+		-Server
+	}
+
+	# Данные лежат в браузере, поэтому service worker обязан обновляться сразу.
+	@sw path /sw.js
+	header @sw Cache-Control "no-store"
+
+	log {
+		output stdout
+		format console
+	}
+}

@@ -1,2 +1,3 @@
 .shots/
 node_modules/
+infra/deploy.env
