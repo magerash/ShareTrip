@@ -22,8 +22,8 @@ python3 -m http.server 8000 --directory web    # затем http://localhost:800
 | | |
 |---|---|
 | приложение | `http://localhost:8000` — логотип ShareTrip и кнопка «Создать поездку». Если поездка уже есть, сразу открывается лента трат. |
-| тесты | `node --test "tests/*.test.mjs"` — должно быть `# pass 61`, `# fail 0`. |
-| живая проверка | `node smoke.mjs` (см. ниже) — 21 шаг, `0 провалено, 0 ошибок в консоли`. |
+| тесты | `node --test "tests/*.test.mjs"` — должно быть `# pass 63`, `# fail 0`. |
+| живая проверка | `npm run smoke` — 21 шаг · `npm run layout` — 32 проверки прокрутки · `npm run form` — 14 проверок формы. Везде `0 провалено`. |
 | вики | `python3 tools/wiki/check-links.py && python3 tools/wiki/wiki-doctor.py` — 0 битых ссылок, 0 отказов. |
 
 **Что нужно свежему клону перед первой командой: ничего.** Ни `npm install`, ни сборки, ни
@@ -39,7 +39,7 @@ python3 -m http.server 8000 --directory web    # затем http://localhost:800
 |---|---|---|
 | Node | `v22.22.2` | `node --version` |
 | Python | `Python 3.11.15` | `python3 --version` |
-| Тесты | 61 случай, 3 файла | `node --test "tests/*.test.mjs"` |
+| Тесты | 63 случая, 3 файла | `node --test "tests/*.test.mjs"` |
 | Браузер для проверки | Chromium из `/opt/pw-browsers/chromium-1194/` | `node smoke.mjs` |
 | Размер `web/` | ~1,4 МБ, из них 1,2 МБ — картинки бренд-пака | `du -sh web` |
 | Зависимостей в рантайме | 0 | в `web/` нет ни одного `import` с внешнего адреса |

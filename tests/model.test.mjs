@@ -6,7 +6,7 @@ import { parseAmount, impliedRate, sum } from '../web/js/money.js';
 import {
   accountBalances, netPositions, settlementPlan, kittyBalanceHome,
   homeShares, homePayers, tripTotals, tracksBalance, totalOnHand, spentFrom,
-  SPLIT, ACCOUNT_KINDS,
+  shiftISO, SPLIT, ACCOUNT_KINDS,
 } from '../web/js/model.js';
 import {
   buildShares, sharesWithPersonalItem, validateExpense,
@@ -491,4 +491,25 @@ test('«потрачено с карты» не считает снятие на
   assert.equal(spentFrom(s, 'a_card'), 300000 + 15000);
   // А деньги при этом лежат на руках, а не исчезли.
   assert.equal(totalOnHand(s), 1998200, '412 AZN по курсу 48,5');
+});
+
+/* ------------------------------------------------------------ даты */
+
+test('shiftISO: границы месяца, года и високосный февраль', () => {
+  assert.equal(shiftISO('2026-09-15', -1), '2026-09-14');
+  assert.equal(shiftISO('2026-09-01', -1), '2026-08-31', 'начало месяца');
+  assert.equal(shiftISO('2026-01-01', -1), '2025-12-31', 'начало года');
+  assert.equal(shiftISO('2026-03-01', -1), '2026-02-28', 'невисокосный февраль');
+  assert.equal(shiftISO('2024-03-01', -1), '2024-02-29', 'високосный февраль');
+  assert.equal(shiftISO('2026-09-15', +1), '2026-09-16');
+  assert.equal(shiftISO('2026-12-31', +1), '2027-01-01');
+  assert.equal(shiftISO('2026-09-15', 0), '2026-09-15');
+});
+
+test('shiftISO: перевод часов не съедает и не удваивает день', () => {
+  // Вокруг обычных дат перехода на летнее/зимнее время в Европе.
+  for (const iso of ['2026-03-29', '2026-03-30', '2026-10-25', '2026-10-26']) {
+    const back = shiftISO(iso, -1);
+    assert.equal(shiftISO(back, +1), iso, `${iso}: −1 и +1 возвращают исходное`);
+  }
 });

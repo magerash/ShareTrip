@@ -5,14 +5,14 @@
 import * as store from '../store.js';
 import {
   h, mount, clear, field, chips, segmented, sheet, toast, confirmSheet,
-  amountInput, select,
+  amountInput, select, formatDate,
 } from '../ui.js';
 import {
   parseAmount, formatMoney, formatAmount, formatRate, convert,
   normalizeRate, remainder, sum,
 } from '../money.js';
 import {
-  alive, byId, todayISO, rateFor, SPLIT, ACCOUNT_KINDS,
+  alive, byId, todayISO, shiftISO, rateFor, SPLIT, ACCOUNT_KINDS,
 } from '../model.js';
 import { buildShares, sharesWithPersonalItem, validateExpense } from '../split.js';
 import { CURRENCY_OPTIONS } from '../currencies.js';
@@ -87,6 +87,48 @@ export function openExpenseSheet(expenseId = null) {
         }));
 
       const derived = h('div.field__hint');
+
+      /* --- 1b. Когда: «Вчера», «Сегодня» и выбор даты ---------------------
+         Раньше дата пряталась в свёрнутом блоке, и трату «за вчера» нельзя
+         было завести, не раскрыв его. Теперь пресеты на виду, а обновляются
+         точечно — иначе перерисовка забирала бы фокус у выбора даты. */
+      const today = todayISO();
+      const yesterday = shiftISO(today, -1);
+
+      const chipYesterday = h('button.chip', {
+        type: 'button',
+        onclick: () => { d.date = yesterday; syncDate(); },
+      }, 'Вчера');
+
+      const chipToday = h('button.chip', {
+        type: 'button',
+        onclick: () => { d.date = today; syncDate(); },
+      }, 'Сегодня');
+
+      const dateInput = h('input.input.input--date', {
+        type: 'date',
+        value: d.date,
+        'aria-label': 'Выбрать другую дату',
+        onchange: (e) => { if (e.target.value) { d.date = e.target.value; syncDate(); } },
+      });
+
+      const dateHint = h('span.field__hint');
+
+      function syncDate() {
+        chipYesterday.setAttribute('aria-pressed', String(d.date === yesterday));
+        chipToday.setAttribute('aria-pressed', String(d.date === today));
+        if (dateInput.value !== d.date) dateInput.value = d.date;
+        const custom = d.date !== today && d.date !== yesterday;
+        dateHint.textContent = custom
+          ? `${formatDate(d.date, { withYear: true })} — оплата до поездки тоже попадёт в расчёт`
+          : '';
+      }
+
+      const dateField = h('div.field', null,
+        h('span.field__label', null, 'Когда'),
+        h('div.chips', null, chipYesterday, chipToday, dateInput),
+        dateHint);
+      syncDate();
 
       /* --- 2. Категория --- */
       const catChips = chips(
@@ -204,12 +246,22 @@ export function openExpenseSheet(expenseId = null) {
       }
       splitDetail.append(h('div#split-left'));
 
-      /* --- 5. Свёрнутое: курс, дата, название, заметка --- */
-      const advanced = h('details', { open: d.advancedOpen },
+      /* --- 5. Заметка: на виду, а не в свёрнутом блоке --- */
+      const noteField = field('Заметка', h('input.input', {
+        type: 'text',
+        value: d.note,
+        placeholder: 'Необязательно',
+        enterkeyhint: 'done',
+        oninput: (e) => { d.note = e.target.value; },
+      }));
+
+      /* --- 6. Свёрнутое: то, что трогают редко --- */
+      const needsRate = d.currency !== home && !rateFor(state, d.currency);
+      const advanced = h('details', { open: d.advancedOpen || needsRate },
         h('summary', {
           style: { cursor: 'pointer', padding: '10px 0', fontWeight: 600, color: 'var(--fg-muted)' },
           onclick: () => { d.advancedOpen = !d.advancedOpen; },
-        }, 'Курс, дата, название'),
+        }, 'Курс, название, возврат'),
         h('div', null,
           d.currency !== home ? field(`Курс ${d.currency} → ${home}`,
             amountInput(d.rateText, {
@@ -221,29 +273,23 @@ export function openExpenseSheet(expenseId = null) {
             type: 'text', value: d.title, placeholder: byId(state.categories, d.categoryId)?.name || 'Трата',
             oninput: (e) => { d.title = e.target.value; },
           })),
-          field('Дата', h('input.input', {
-            type: 'date', value: d.date,
-            oninput: (e) => { d.date = e.target.value; },
-          }), { hint: 'Оплату до поездки ставьте её настоящей датой — в расчёт она попадёт.' }),
           h('label.switch-row', null,
             h('input', {
               type: 'checkbox', checked: d.refund,
               onchange: (e) => { d.refund = e.target.checked; refreshDerived(); },
             }),
             h('span.switch-row__label', null, 'Это возврат или доход',
-              h('small', null, 'Возврат депозита, кэшбэк. Сумма учтётся со знаком минус.'))),
-          field('Заметка', h('textarea.textarea', {
-            value: d.note, placeholder: 'Необязательно',
-            oninput: (e) => { d.note = e.target.value; },
-          }))));
+              h('small', null, 'Возврат депозита, кэшбэк. Сумма учтётся со знаком минус.')))));
 
       return [
         amountRow, derived,
+        dateField,
         h('div.field', null, h('span.field__label', null, 'Категория'), catChips),
         h('div.field', null, h('span.field__label', null, 'Кто платил'), payerChips),
         payerDetail,
         h('div.field', null, h('span.field__label', null, 'Как делить'), splitSeg),
         splitDetail,
+        noteField,
         advanced,
         errBox,
         h('div.sheet__actions', null,
@@ -326,7 +372,7 @@ export function openExpenseSheet(expenseId = null) {
       const rate = effectiveRate();
 
       if (total == null) { fail('Введите сумму'); return; }
-      if (!rate) { fail(`Не задан курс ${d.currency} → ${home}. Раскройте «Курс, дата, название».`); return; }
+      if (!rate) { fail(`Не задан курс ${d.currency} → ${home}. Впишите его в блоке «Курс, название, возврат».`); return; }
 
       const amountHome = convert(total, d.currency, rate, home);
       const shares = currentShares(total);

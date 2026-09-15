@@ -48,11 +48,13 @@ long instruction file gets followed less reliably than a short one.
   project releases as `versioned` — a `wiki-artefact` project has no version and writes
   `type(scope): the name` instead. The commit gate enforces the shape; the grammar is
   `docs/commits.md` where it exists.
-- **Measure, don't guess.** The instruments are `node --test "tests/*.test.mjs"` (57 cases:
-  money core, settlement model, CSV) and `node smoke.mjs` — a Playwright run that drives the
-  real UI in Chromium and asserts the numbers *on screen*. Two claims have no instrument yet
-  and must not be asserted without one: "the app is fast" (no timing baseline) and "entry
-  takes 2–3 taps" (no tap counter). Both are rows in `docs/ROADMAP.md`.
+- **Measure, don't guess.** The instruments are `npm test` (63 cases: money core, settlement
+  model, CSV, dates) plus three Playwright suites that drive the real UI in Chromium and
+  assert what is *on screen*: `npm run smoke` (the money scenario end to end),
+  `npm run layout` (scroll reaches the bottom, both page variants × four viewports) and
+  `npm run form` (date and note are visible without expanding anything). Two claims still
+  have no instrument and must not be asserted without one: "the app is fast" (no timing
+  baseline) and "entry takes 2–3 taps" (no tap counter). Both are rows in `docs/ROADMAP.md`.
 
 ## Run and verify
 

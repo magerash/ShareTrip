@@ -56,6 +56,7 @@ of what happened is the session chunk, and this line is a pointer to it. Newest 
 
 | Landed | # | What | Record |
 |---|---|---|---|
+| 2026-09-15 | 15 | **Дата и заметка на виду**, у даты пресеты «Вчера»/«Сегодня» | [chunk](sessions/02-money-core/2026-09-15-money-core.md) |
 | 2026-09-15 | 6 | **Выгрузка CSV и перенос данных** — четыре листа, `;` и BOM для Excel | [chunk](sessions/02-money-core/2026-09-15-money-core.md) |
 | 2026-09-15 | 5 | **Экраны** — лента, быстрый ввод, счета, итог, настройки | [chunk](sessions/02-money-core/2026-09-15-money-core.md) |
 | 2026-09-15 | 4 | **«Кто кому должен»** — прямой расчёт с разбивкой, общая касса | [chunk](sessions/02-money-core/2026-09-15-money-core.md) |

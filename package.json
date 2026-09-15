@@ -10,7 +10,8 @@
     "smoke": "node tests/smoke.mjs",
     "wiki": "python3 tools/wiki/check-links.py && python3 tools/wiki/wiki-doctor.py",
     "check": "npm test && npm run wiki",
-    "layout": "node tests/layout.mjs"
+    "layout": "node tests/layout.mjs",
+    "form": "node tests/form.mjs"
   },
   "devDependencies": {
     "playwright": "^1.48.0"

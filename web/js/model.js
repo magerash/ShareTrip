@@ -19,6 +19,19 @@ export function todayISO() {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
+/**
+ * Сдвиг даты на N дней. Считается в UTC намеренно: календарная дата — не момент
+ * времени, а арифметика по местному времени в день перевода часов даёт либо то же
+ * самое число, либо прыжок через день (D-014).
+ */
+export function shiftISO(iso, days) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() + days);
+  const p = (n) => String(n).padStart(2, '0');
+  return `${dt.getUTCFullYear()}-${p(dt.getUTCMonth() + 1)}-${p(dt.getUTCDate())}`;
+}
+
 /* ------------------------------------------------------------------ helpers */
 
 export const alive = (list) => (list || []).filter((r) => !r.deleted);
