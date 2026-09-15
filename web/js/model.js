@@ -113,16 +113,61 @@ export function accountBalances(state) {
   return out;
 }
 
-/** Сумма всех остатков в домашней валюте. null, если какого-то курса не хватает. */
+/**
+ * Следит ли счёт за остатком.
+ *
+ * Наличные и общая касса — да: смысл в том, сколько ещё осталось в кармане.
+ * Карта — нет: настоящий остаток лежит в банке, а не здесь, и показывать по ней
+ * «−20 000 ₽» значит утверждать, что у человека минус двадцать тысяч. Карта просто
+ * копит траты (D-011). Флаг можно переопределить вручную для каждого счёта.
+ */
+export function tracksBalance(account) {
+  if (!account) return false;
+  if (typeof account.tracksBalance === 'boolean') return account.tracksBalance;
+  return account.kind !== ACCOUNT_KINDS.CARD;
+}
+
+/**
+ * Сколько денег на руках — в домашней валюте.
+ * Считаются только счета, следящие за остатком: карты сюда не входят.
+ * null, если какого-то курса не хватает.
+ */
 export function totalOnHand(state) {
   const bal = accountBalances(state);
   let total = 0;
   for (const a of alive(state.accounts)) {
+    if (!tracksBalance(a)) continue;
     const h = toHome(state, bal[a.id] || 0, a.currency);
     if (h === null) return null;
     total += h;
   }
   return total;
+}
+
+/**
+ * Сколько ДЕЙСТВИТЕЛЬНО потрачено с этого счёта за поездку.
+ *
+ * Считаются оплаченные с него траты и комиссии банка. Не считаются переводы на
+ * свои же счета: снять 20 000 ₽ в банкомате — это не расход, деньги никуда не
+ * делись, они просто стали наличными. Иначе одни и те же деньги были бы
+ * «потрачены» на карте и одновременно лежали бы «на руках».
+ */
+export function spentFrom(state, accountId) {
+  let spent = 0;
+
+  for (const e of alive(state.expenses)) {
+    for (const p of e.payers) {
+      if (p.accountId !== accountId) continue;
+      spent += p.chargedAmount != null ? p.chargedAmount : p.amount;
+    }
+  }
+
+  // Комиссия — настоящая потеря денег, в отличие от самого перевода.
+  for (const t of alive(state.transfers)) {
+    if (t.fromAccountId === accountId) spent += (t.feeAmount || 0);
+  }
+
+  return spent;
 }
 
 /* -------------------------------------------------------------- who owes whom */

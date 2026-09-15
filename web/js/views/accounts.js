@@ -10,7 +10,8 @@ import {
   parseAmount, formatMoney, formatAmount, formatRate, impliedRate, normalizeRate,
 } from '../money.js';
 import {
-  alive, byId, todayISO, accountBalances, toHome, rateFor, ACCOUNT_KINDS,
+  alive, byId, todayISO, accountBalances, toHome, rateFor, tracksBalance,
+  totalOnHand, spentFrom, ACCOUNT_KINDS,
 } from '../model.js';
 import { validateTransfer } from '../split.js';
 import { CURRENCY_OPTIONS } from '../currencies.js';
@@ -25,18 +26,27 @@ export function renderAccounts(state) {
 
   const out = [];
 
-  let total = 0;
-  let complete = true;
-  for (const a of accounts) {
-    const v = toHome(state, bal[a.id] || 0, a.currency);
-    if (v === null) complete = false; else total += v;
+  const tracked = accounts.filter(tracksBalance);
+  const cards = accounts.filter((a) => !tracksBalance(a));
+  const total = totalOnHand(state);
+
+  let cardSpent = 0;
+  let cardsComplete = true;
+  for (const a of cards) {
+    const v = toHome(state, spentFrom(state, a.id), a.currency);
+    if (v === null) cardsComplete = false; else cardSpent += v;
   }
 
   out.push(h('div.card', null,
     h('div.card__head', null, h('h2', null, 'На руках')),
     h('div.hero__value.num', { style: { fontSize: '1.9rem', fontWeight: '800' } },
-      complete ? formatMoney(total, home) : '— курс не задан'),
-    h('div.field__hint', null, 'Сумма всех счетов в домашней валюте по курсам поездки.')));
+      total === null ? '— курс не задан' : formatMoney(total, home)),
+    h('div.field__hint', null, tracked.length
+      ? 'Наличные и общая касса в домашней валюте. Карты сюда не входят: их остаток знает банк, а не приложение.'
+      : 'Пока нет ни одного счёта с остатком. Заведите наличные или общую кассу — и здесь появится, сколько денег в кармане.'),
+    cards.length ? h('div.kv', { style: { marginTop: '10px' } },
+      h('span.kv__k', null, `Потрачено с карт (${cards.length})`),
+      h('span.kv__v.num', null, cardsComplete ? formatMoney(cardSpent, home) : 'курс не задан')) : null));
 
   // Группируем: люди, потом общее.
   for (const p of alive(state.people)) {
@@ -73,16 +83,21 @@ export function renderAccounts(state) {
 
 function accountRow(state, a, balance) {
   const home = state.trip.homeCurrency;
-  const inHome = toHome(state, balance, a.currency);
+  const tracks = tracksBalance(a);
+  // У карты показываем потраченное: её настоящий остаток живёт в банке (D-011).
+  const value = tracks ? balance : spentFrom(state, a.id);
+  const inHome = toHome(state, value, a.currency);
+
   return h('button.item', {
     type: 'button', onclick: () => openAccountSheet(a.id),
   },
   h('div.item__icon', null, KIND_ICON[a.kind] || '💳'),
   h('div.item__body', null,
     h('div.item__title', null, a.name),
-    h('div.item__sub', null, `${KIND_LABEL[a.kind] || a.kind} · ${a.currency}`)),
+    h('div.item__sub', null,
+      `${KIND_LABEL[a.kind] || a.kind} · ${a.currency} · ${tracks ? 'остаток' : 'потрачено'}`)),
   h('div.item__amount.num', null,
-    h('b', { class: balance < 0 ? 'neg' : '' }, formatMoney(balance, a.currency)),
+    h('b', { class: tracks && balance < 0 ? 'neg' : '' }, formatMoney(value, a.currency)),
     a.currency !== home
       ? h('span', null, inHome === null ? 'курс не задан' : formatMoney(inHome, home))
       : null));
@@ -123,12 +138,14 @@ export function openAccountSheet(accountId = null) {
     kind: existing.kind,
     currency: existing.currency,
     openingText: formatAmount(existing.opening || 0, existing.currency),
+    tracks: tracksBalance(existing),
   } : {
     name: '',
     ownerId: people[0]?.id || '',
     kind: ACCOUNT_KINDS.CASH,
     currency: state.trip.homeCurrency,
     openingText: '',
+    tracks: true, // по умолчанию заводят наличные
   };
 
   sheet(existing ? 'Счёт' : 'Новый счёт', (close) => {
@@ -147,6 +164,7 @@ export function openAccountSheet(accountId = null) {
           d.kind = v;
           if (v === ACCOUNT_KINDS.KITTY) d.ownerId = '';
           else if (!d.ownerId) d.ownerId = people[0]?.id || '';
+          d.tracks = v !== ACCOUNT_KINDS.CARD;
           redraw();
         }), {
           hint: isKitty
@@ -166,9 +184,18 @@ export function openAccountSheet(accountId = null) {
           CURRENCY_OPTIONS.map((o) => ({ value: o.value, label: o.label })), d.currency,
           (e) => { d.currency = e.target.value; redraw(); },
         ), { hint: 'Один счёт — одна валюта. Для второй валюты заведите ещё один счёт.' }),
-        field('Начальный остаток', amountInput(d.openingText, {
+        h('label.switch-row', null,
+          h('input', {
+            type: 'checkbox', checked: d.tracks,
+            onchange: (e) => { d.tracks = e.target.checked; redraw(); },
+          }),
+          h('span.switch-row__label', null, 'Следить за остатком',
+            h('small', null, d.tracks
+              ? 'Счёт попадёт в «На руках». Так имеет смысл для наличных и общей кассы.'
+              : 'Приложение будет копить только траты. Так имеет смысл для карты: её настоящий остаток знает банк.'))),
+        d.tracks ? field('Начальный остаток', amountInput(d.openingText, {
           oninput: (e) => { d.openingText = e.target.value; },
-        }), { hint: 'Сколько было на счету к началу поездки. Можно оставить нулём.' }),
+        }), { hint: 'Сколько лежало на счету к началу поездки. Можно оставить нулём.' }) : null,
         errBox,
         h('div.sheet__actions', null,
           existing ? h('button.btn.btn--danger', {
@@ -202,7 +229,8 @@ export function openAccountSheet(accountId = null) {
         ownerId: d.kind === ACCOUNT_KINDS.KITTY ? null : (d.ownerId || null),
         kind: d.kind,
         currency: d.currency,
-        opening,
+        opening: d.tracks ? opening : 0,
+        tracksBalance: d.tracks,
       };
       if (existing) store.updateAccount(existing.id, rec);
       else store.addAccount(rec);

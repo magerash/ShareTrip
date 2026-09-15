@@ -5,7 +5,8 @@ import assert from 'node:assert/strict';
 import { parseAmount, impliedRate, sum } from '../web/js/money.js';
 import {
   accountBalances, netPositions, settlementPlan, kittyBalanceHome,
-  homeShares, homePayers, tripTotals, SPLIT, ACCOUNT_KINDS,
+  homeShares, homePayers, tripTotals, tracksBalance, totalOnHand, spentFrom,
+  SPLIT, ACCOUNT_KINDS,
 } from '../web/js/model.js';
 import {
   buildShares, sharesWithPersonalItem, validateExpense,
@@ -424,4 +425,70 @@ test('ЭТАЛОН: RUB→AZN в обменнике → трата картой 
   assert.equal(plan.transfers[0].amount, 205097, 'половина ужина по замороженному курсу');
   assert.equal(plan.net[A] + plan.net[V], 0);
   assert.deepEqual(plan.missingRates, [], 'курсов хватило, сеть не понадобилась');
+});
+
+/* ------------------------------------------------ счета с остатком и без */
+
+test('карта не показывает отрицательный остаток как деньги на руках (D-011)', () => {
+  const s = baseState();
+  // Карта по умолчанию остаток не ведёт: её настоящий баланс знает банк.
+  const card = byIdLocal(s.accounts, 'a_card');
+  assert.equal(tracksBalance(card), false, 'карта — не кошелёк');
+  assert.equal(tracksBalance(byIdLocal(s.accounts, 'a_azn')), true, 'наличные — кошелёк');
+
+  s.accounts = s.accounts.map((a) => ({ ...a, opening: 0 }));
+  s.expenses = [expense({
+    amount: 410194, amountHome: 410194,
+    payers: [{ accountId: 'a_card', personId: A, amount: 410194 }],
+    shares: [{ personId: A, amount: 205097 }, { personId: V, amount: 205097 }],
+  })];
+
+  // «На руках» не уходит в минус из-за траты по карте.
+  assert.equal(totalOnHand(s), 0, 'наличных нет — значит ноль, а не минус');
+  assert.equal(spentFrom(s, 'a_card'), 410194, 'по карте показывается потраченное');
+});
+
+test('наличные и касса складываются в «на руках», карты — нет', () => {
+  const s = baseState();
+  s.accounts = s.accounts.map((a) => ({ ...a, opening: 0 }));
+  s.accounts.push({
+    id: 'kitty', name: 'Касса', ownerId: null, kind: ACCOUNT_KINDS.KITTY,
+    currency: 'AZN', opening: 0,
+  });
+  s.transfers = [
+    // Ксюша сняла наличные с карты: карта в минус не уходит, наличные растут.
+    { id: 't1', date: '2026-09-01', fromAccountId: 'a_card', toAccountId: 'a_azn', amountOut: 1000000, amountIn: 20600, feeAmount: 0 },
+    { id: 't2', date: '2026-09-01', fromAccountId: 'v_card', toAccountId: 'kitty', amountOut: 500000, amountIn: 10300, feeAmount: 0 },
+  ];
+  // 206 AZN наличных + 103 AZN в кассе = 309 AZN по курсу 48,5 = 14 986,50 ₽
+  assert.equal(totalOnHand(s), 1498650);
+  // Со счетов только переводили на свои же — потрачено ноль, деньги целы.
+  assert.equal(spentFrom(s, 'a_card'), 0, 'снятие наличных — не расход');
+  assert.equal(spentFrom(s, 'v_card'), 0, 'взнос в кассу — тоже не расход');
+});
+
+test('флаг можно переопределить вручную', () => {
+  assert.equal(tracksBalance({ kind: ACCOUNT_KINDS.CARD, tracksBalance: true }), true);
+  assert.equal(tracksBalance({ kind: ACCOUNT_KINDS.CASH, tracksBalance: false }), false);
+});
+
+function byIdLocal(list, id) { return list.find((x) => x.id === id); }
+
+test('«потрачено с карты» не считает снятие наличных расходом', () => {
+  const s = baseState();
+  s.accounts = s.accounts.map((a) => ({ ...a, opening: 0 }));
+  s.transfers = [{
+    id: 't1', date: '2026-09-01', fromAccountId: 'a_card', toAccountId: 'a_azn',
+    amountOut: 2000000, amountIn: 41200, feeAmount: 15000,
+  }];
+  s.expenses = [expense({
+    amount: 300000, amountHome: 300000,
+    payers: [{ accountId: 'a_card', personId: A, amount: 300000 }],
+    shares: [{ personId: A, amount: 150000 }, { personId: V, amount: 150000 }],
+  })];
+
+  // Потрачено = трата 3 000 ₽ + комиссия 150 ₽. 20 000 ₽ снятия — не расход.
+  assert.equal(spentFrom(s, 'a_card'), 300000 + 15000);
+  // А деньги при этом лежат на руках, а не исчезли.
+  assert.equal(totalOnHand(s), 1998200, '412 AZN по курсу 48,5');
 });

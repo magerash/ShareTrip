@@ -97,6 +97,10 @@ wrong at least once, in this repo or in the apps the research surveyed:
   a bill in another, `payer.chargedAmount` drives the balance while the *split* uses the
   expense's own frozen rate (D-005). The two are meant to differ; that difference is the
   card's margin, not an error.
+- **A card is not a wallet.** `tracksBalance()` decides whether an account reports a balance
+  (cash, kitty) or accumulated spending (card). "Spent" counts expenses and fees only — a
+  transfer to your own account is not spending, or the same money shows up both as spent and
+  as cash in hand (D-011).
 - **Never pass a conditional child to native `.append()`.** `el.append(null)` inserts the
   literal text "null". Use `mount()` from `web/js/ui.js`, which filters. This shipped once
   and put stray "null" on the settlement screen.
