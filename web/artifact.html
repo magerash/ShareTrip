@@ -1,0 +1,29 @@
+<title>ShareTrip</title>
+<!--
+  Точка входа ТОЛЬКО для размещения в артефакте claude.ai.
+  Площадка сама оборачивает файл в <!doctype html><head>…</head><body>, поэтому
+  здесь нет ни <html>, ни <head>, ни <body>. Для обычного хостинга (VPS, Caddy
+  file_server) точка входа — index.html рядом; разметка и скрипты общие, поэтому
+  расходиться им негде.
+-->
+<link rel="stylesheet" href="css/app.css">
+<style>
+  /* Оболочка площадки задаёт свой фон и шрифт — возвращаем свои. */
+  html, body { height: 100%; background: var(--bg); color: var(--fg); font-family: var(--font); }
+</style>
+
+<div id="root">
+  <div class="splash">
+    <img src="assets/logo-horizontal.png" alt="ShareTrip" width="260">
+    <p class="muted">Загружаю…</p>
+  </div>
+</div>
+
+<noscript>
+  <div class="splash">
+    <h1>Нужен JavaScript</h1>
+    <p class="muted">ShareTrip считает всё на устройстве, поэтому без JavaScript работать не может.</p>
+  </div>
+</noscript>
+
+<script type="module" src="js/app.js"></script>

@@ -1,0 +1,19 @@
+ShareTrip — Vanilla ES modules, no build step; IndexedDB local-first; served as static files by Caddy file_server; Supabase (Postgres 17 + PostgREST + GoTrue) planned for sync
+
+The rules of this repo are in AGENTS.md at the root. Read it. Do not copy it here.
+
+Canonical knowledge is the wiki in docs/. Read docs/README.md before working: preflight,
+update regulation, document map, concept index.
+
+Set your row in docs/ROADMAP.md to ▶ before the first edit; ✅ or ⏸ (with what remains and
+where it is) when you stop.
+
+After changes, follow the "Update regulation" in docs/README.md, then:
+    python3 tools/wiki/check-links.py && python3 tools/wiki/wiki-doctor.py
+
+Cite ids (D-nnn, A-nnn, B-n) instead of restating what they say.
+
+---
+This file is a legacy shim. Current Cursor versions read AGENTS.md natively, so if your
+whole team is on a recent build you can delete it. It is shipped because a stale editor
+silently reading nothing is worse than one duplicated pointer.

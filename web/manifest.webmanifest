@@ -1,0 +1,19 @@
+{
+  "name": "ShareTrip — траты вдвоём",
+  "short_name": "ShareTrip",
+  "description": "Мультивалютные счета, ручной курс, замороженный в момент траты, и прямой ответ на вопрос «кто кому должен». Всё считается на устройстве.",
+  "lang": "ru",
+  "dir": "ltr",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F2F7FB",
+  "theme_color": "#0F2D5B",
+  "categories": ["finance", "travel", "productivity"],
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

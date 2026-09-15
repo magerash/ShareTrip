@@ -1,0 +1,19 @@
+{
+  "name": "sharetrip",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Трекер трат для поездки вдвоём: мультивалютные счета, ручной замороженный курс, «кто кому должен».",
+  "type": "module",
+  "scripts": {
+    "start": "python3 -m http.server 8000 --directory web",
+    "test": "node --test \"tests/*.test.mjs\"",
+    "smoke": "node tests/smoke.mjs",
+    "wiki": "python3 tools/wiki/check-links.py && python3 tools/wiki/wiki-doctor.py",
+    "check": "npm test && npm run wiki"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.0"
+  },
+  "comment": "Зависимость ровно одна и только для живой проверки в браузере. Само приложение в web/ не зависит ни от чего: ни сборки, ни рантайма, ни сети (D-009).",
+  "engines": { "node": ">=20" }
+}

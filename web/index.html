@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ShareTrip</title>
+<meta name="description" content="Трекер трат для поездки вдвоём: мультивалютные счета, ручной курс, «кто кому должен».">
+<meta name="theme-color" content="#0F2D5B" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F7FB" media="(prefers-color-scheme: light)">
+<meta name="color-scheme" content="light dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ShareTrip">
+<link rel="icon" href="assets/icons/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="assets/icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div id="root">
+  <div class="splash">
+    <img src="assets/logo-horizontal.png" alt="ShareTrip" width="260">
+    <p class="muted">Загружаю…</p>
+  </div>
+</div>
+
+<noscript>
+  <div class="splash">
+    <h1>Нужен JavaScript</h1>
+    <p class="muted">ShareTrip считает всё на устройстве, поэтому без JavaScript работать не может.</p>
+  </div>
+</noscript>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
