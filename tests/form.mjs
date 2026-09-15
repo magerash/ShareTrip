@@ -48,14 +48,18 @@ await page.waitForSelector('.nav');
 await page.click('.fab');
 await page.waitForSelector('.sheet');
 
-// 1. Дата и заметка видны БЕЗ раскрытия свёрнутого блока.
-const detailsOpen = await page.evaluate(() => document.querySelector('.sheet details')?.open ?? null);
-check(detailsOpen === false, 'свёрнутый блок закрыт', `open=${detailsOpen}`);
+// 1. Дата, название и заметка видны сразу, без раскрытия чего-либо.
+const summaries = await page.$$eval('.sheet summary', els => els.map(e => e.textContent.trim()));
+check(!summaries.some(t => /курс|назван|возврат/i.test(t)),
+  'свёрнутого блока «курс/название/возврат» больше нет', summaries.join(' | '));
 
 check(await page.isVisible('.sheet .chip:has-text("Сегодня")'), 'чип «Сегодня» виден');
 check(await page.isVisible('.sheet .chip:has-text("Вчера")'), 'чип «Вчера» виден');
 check(await page.isVisible('.sheet input[type=date]'), 'выбор даты виден');
 check(await page.isVisible('.sheet input[placeholder="Необязательно"]'), 'заметка видна');
+check(await page.isVisible('.sheet input[placeholder="Еда"], .sheet input[placeholder="Жильё"]')
+   || await page.isVisible('.sheet .field:has-text("НАЗВАНИЕ") input'), 'название видно');
+check(await page.isVisible('.sheet .switch-row:has-text("возврат")'), 'отметка «возврат» видна');
 
 // 2. По умолчанию выбрано «Сегодня».
 const pressedToday = await page.getAttribute('.sheet .chip:has-text("Сегодня")','aria-pressed');
@@ -79,9 +83,44 @@ const hint = await page.textContent('.sheet .field:has(input[type=date]) .field_
 check(py2==='false','при своей дате пресеты сняты',`вчера=${py2}`);
 check(/10 августа 2026/.test(hint||''),'подсказка называет выбранную дату',`«${(hint||'').trim()}»`);
 
+// 4b. Название: плейсхолдер идёт за категорией, значение сохраняется.
+await page.click('.sheet .chip:has-text("Жильё")');
+await page.waitForTimeout(120);
+const ph = await page.getAttribute('.sheet .field:has(span:text("НАЗВАНИЕ")) input', 'placeholder');
+check(ph === 'Жильё', 'плейсхолдер названия идёт за категорией', `«${ph}»`);
+
+// 4c. Курс появляется сам, когда валюта не домашняя.
+await page.selectOption('.sheet select >> nth=0', 'AZN');
+await page.waitForTimeout(150);
+const rateVisible = await page.isVisible('.sheet .field:has-text("КУРС AZN") input');
+check(rateVisible, 'поле курса показано сразу для чужой валюты');
+await page.selectOption('.sheet select >> nth=0', 'RUB');
+await page.waitForTimeout(150);
+const rateGone = await page.isVisible('.sheet .field:has-text("КУРС") input');
+check(!rateGone, 'для домашней валюты поля курса нет', `видно=${rateGone}`);
+
+// 4d. Форма стала длинной — последний её элемент обязан быть достижим.
+//     Ждём, пока шторка сфокусирует первое поле: браузер возвращает прокрутку
+//     наверх ПОСЛЕ фокуса, и замер до этого момента меряет не то.
+await page.waitForTimeout(600);
+const reach = await page.evaluate(() => new Promise((res) => {
+  const sheet = document.querySelector('.sheet');
+  sheet.scrollTop = sheet.scrollHeight;
+  setTimeout(() => {
+    const actions = document.querySelector('.sheet__actions');
+    const last = document.querySelector('.sheet .switch-row');
+    res({
+      overlap: Math.round(last.getBoundingClientRect().bottom - actions.getBoundingClientRect().top),
+      atEnd: Math.abs(sheet.scrollTop - (sheet.scrollHeight - sheet.clientHeight)) < 2,
+    });
+  }, 350);
+}));
+check(reach.atEnd && reach.overlap <= 0,
+  'низ формы достижим: панель действий его не закрывает',
+  `перекрытие ${reach.overlap} px, доскроллено=${reach.atEnd}`);
+
 // 5. Сохранение с этой датой и заметкой.
 await page.fill('.sheet input[inputmode="decimal"] >> nth=0','1500');
-await page.click('.sheet .chip:has-text("Еда")');
 await page.fill('.sheet input[placeholder="Необязательно"]','ужин у моря');
 await page.click('.sheet__actions button:has-text("Сохранить")');
 await page.waitForSelector('.sheet',{state:'detached',timeout:5000});

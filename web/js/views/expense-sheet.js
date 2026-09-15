@@ -48,7 +48,6 @@ export function openExpenseSheet(expenseId = null) {
     rateText: rateFor(state, last?.currency || home) || '',
     note: '',
     refund: false,
-    advancedOpen: false,
   };
 
   sheet(existing ? 'Трата' : 'Новая трата', (close) => {
@@ -246,7 +245,15 @@ export function openExpenseSheet(expenseId = null) {
       }
       splitDetail.append(h('div#split-left'));
 
-      /* --- 5. Заметка: на виду, а не в свёрнутом блоке --- */
+      /* --- 4b. Название: подставляется из категории, но видно и правится --- */
+      const titleField = field('Название', h('input.input', {
+        type: 'text',
+        value: d.title,
+        placeholder: byId(state.categories, d.categoryId)?.name || 'Трата',
+        oninput: (e) => { d.title = e.target.value; },
+      }), { hint: 'Можно не заполнять — тогда возьмётся название категории.' });
+
+      /* --- 5. Заметка --- */
       const noteField = field('Заметка', h('input.input', {
         type: 'text',
         value: d.note,
@@ -255,42 +262,41 @@ export function openExpenseSheet(expenseId = null) {
         oninput: (e) => { d.note = e.target.value; },
       }));
 
-      /* --- 6. Свёрнутое: то, что трогают редко --- */
-      const needsRate = d.currency !== home && !rateFor(state, d.currency);
-      const advanced = h('details', { open: d.advancedOpen || needsRate },
-        h('summary', {
-          style: { cursor: 'pointer', padding: '10px 0', fontWeight: 600, color: 'var(--fg-muted)' },
-          onclick: () => { d.advancedOpen = !d.advancedOpen; },
-        }, 'Курс, название, возврат'),
-        h('div', null,
-          d.currency !== home ? field(`Курс ${d.currency} → ${home}`,
-            amountInput(d.rateText, {
-              placeholder: rateFor(state, d.currency) || '0',
-              oninput: (e) => { d.rateText = e.target.value; refreshDerived(); },
-            }),
-            { hint: `Сколько ${home} за 1 ${d.currency}. Замораживается в момент сохранения — потом не пересчитается.` }) : null,
-          field('Название', h('input.input', {
-            type: 'text', value: d.title, placeholder: byId(state.categories, d.categoryId)?.name || 'Трата',
-            oninput: (e) => { d.title = e.target.value; },
-          })),
-          h('label.switch-row', null,
-            h('input', {
-              type: 'checkbox', checked: d.refund,
-              onchange: (e) => { d.refund = e.target.checked; refreshDerived(); },
-            }),
-            h('span.switch-row__label', null, 'Это возврат или доход',
-              h('small', null, 'Возврат депозита, кэшбэк. Сумма учтётся со знаком минус.')))));
+      /* --- 6. Курс: только когда валюта не домашняя, и сразу на виду ---------
+         Свёрнутого блока больше нет. После того как дата, заметка и название
+         переехали наружу, в нём оставались курс и одна галочка — а прятать курс
+         вредно: без него трата не сохраняется, и человек упирался в ошибку,
+         которая отсылала его раскрывать блок (D-015). */
+      const rateField = d.currency !== home
+        ? field(`Курс ${d.currency} → ${home}`,
+          amountInput(d.rateText, {
+            placeholder: rateFor(state, d.currency) || '0',
+            oninput: (e) => { d.rateText = e.target.value; refreshDerived(); },
+          }),
+          { hint: `Сколько ${home} за 1 ${d.currency}. Замораживается при сохранении — потом не пересчитается.` })
+        : null;
+
+      /* --- 7. Возврат или доход --- */
+      const refundRow = h('label.switch-row', null,
+        h('input', {
+          type: 'checkbox', checked: d.refund,
+          onchange: (e) => { d.refund = e.target.checked; refreshDerived(); },
+        }),
+        h('span.switch-row__label', null, 'Это возврат или доход',
+          h('small', null, 'Возврат депозита, кэшбэк. Сумма учтётся со знаком минус.')));
 
       return [
         amountRow, derived,
+        rateField,
         dateField,
         h('div.field', null, h('span.field__label', null, 'Категория'), catChips),
+        titleField,
         h('div.field', null, h('span.field__label', null, 'Кто платил'), payerChips),
         payerDetail,
         h('div.field', null, h('span.field__label', null, 'Как делить'), splitSeg),
         splitDetail,
         noteField,
-        advanced,
+        refundRow,
         errBox,
         h('div.sheet__actions', null,
           existing ? h('button.btn.btn--danger', {
@@ -372,7 +378,7 @@ export function openExpenseSheet(expenseId = null) {
       const rate = effectiveRate();
 
       if (total == null) { fail('Введите сумму'); return; }
-      if (!rate) { fail(`Не задан курс ${d.currency} → ${home}. Впишите его в блоке «Курс, название, возврат».`); return; }
+      if (!rate) { fail(`Не задан курс ${d.currency} → ${home}. Впишите его в поле «Курс» вверху формы.`); return; }
 
       const amountHome = convert(total, d.currency, rate, home);
       const shares = currentShares(total);
@@ -512,6 +518,5 @@ function fromExpense(e, state) {
     rateText: e.rate,
     note: e.note || '',
     refund: e.amount < 0,
-    advancedOpen: false,
   };
 }
