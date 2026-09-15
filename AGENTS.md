@@ -101,6 +101,11 @@ wrong at least once, in this repo or in the apps the research surveyed:
   (cash, kitty) or accumulated spending (card). "Spent" counts expenses and fees only — a
   transfer to your own account is not spending, or the same money shows up both as spent and
   as cash in hand (D-011).
+- **Bottom-bar clearance belongs to the content, not to `body`.** `--nav-clear` is applied
+  as `padding-bottom` on `.view`. A `padding-bottom` on `body` stops extending the scroll
+  area the moment anything gives `body` a fixed height, and the last 30–40px of every screen
+  hides under the fixed nav (D-012). Never set `height` on `body`; run `npm run layout`
+  after touching page-level layout.
 - **Never pass a conditional child to native `.append()`.** `el.append(null)` inserts the
   literal text "null". Use `mount()` from `web/js/ui.js`, which filters. This shipped once
   and put stray "null" on the settlement screen.
