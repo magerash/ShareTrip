@@ -5,13 +5,15 @@
   "description": "Трекер трат для поездки вдвоём: мультивалютные счета, ручной замороженный курс, «кто кому должен».",
   "type": "module",
   "scripts": {
-    "start": "python3 -m http.server 8000 --directory web",
+    "start": "node infra/serve.mjs",
     "test": "node --test \"tests/*.test.mjs\"",
     "smoke": "node tests/smoke.mjs",
-    "wiki": "python3 tools/wiki/check-links.py && python3 tools/wiki/wiki-doctor.py",
+    "wiki": "node tools/wiki/py.mjs check-links.py && node tools/wiki/py.mjs wiki-doctor.py",
     "check": "npm test && npm run wiki",
     "layout": "node tests/layout.mjs",
-    "form": "node tests/form.mjs"
+    "form": "node tests/form.mjs",
+    "doctor": "node tools/wiki/py.mjs wiki-doctor.py --fix",
+    "verify": "npm test && npm run form && npm run layout && npm run smoke && npm run wiki"
   },
   "devDependencies": {
     "playwright": "^1.48.0"

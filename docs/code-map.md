@@ -101,6 +101,7 @@ file and is the reason nobody has to do it by hand.
 | `tools/wiki/check-links.py` | Проверяет, что каждая относительная ссылка в вики разрешается. |
 | `tools/wiki/wiki-doctor.py` | Семь проверок регламента: устаревшие счётчики, непроверенные пути в code-map, целостность id, инварианты доски, полнота индекса сессий. |
 | `tools/wiki/new-session.py` | Занимает следующий номер сессии без гонки и создаёт папку с заготовкой. |
+| `tools/wiki/py.mjs` | Запускает скрипты вики тем Python, который есть на машине: `py -3`, `python3`, `python`. Нужен из-за Windows, где `python3` — шим из Microsoft Store, который ничего не выполняет: без обёртки хуки и `npm run wiki` там молча мертвы (D-016). |
 | `tools/wiki/hook_*.py` | Хуки Claude Code: преflight, гейт коммита, страж и бюджет файлов. |
 
 **Entry points:** `python3 tools/wiki/check-links.py && python3 tools/wiki/wiki-doctor.py`

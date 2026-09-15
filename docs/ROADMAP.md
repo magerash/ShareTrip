@@ -56,6 +56,7 @@ of what happened is the session chunk, and this line is a pointer to it. Newest 
 
 | Landed | # | What | Record |
 |---|---|---|---|
+| 2026-09-15 | 17 | **Кросс-платформенный запуск** и хендофф на домашний компьютер | [chunk](sessions/02-money-core/2026-09-15-money-core.md) |
 | 2026-09-15 | 16 | **Свёрнутого блока в форме нет**; PC и Jonsbo — одна машина | [chunk](sessions/02-money-core/2026-09-15-money-core.md) |
 | 2026-09-15 | 15 | **Дата и заметка на виду**, у даты пресеты «Вчера»/«Сегодня» | [chunk](sessions/02-money-core/2026-09-15-money-core.md) |
 | 2026-09-15 | 6 | **Выгрузка CSV и перенос данных** — четыре листа, `;` и BOM для Excel | [chunk](sessions/02-money-core/2026-09-15-money-core.md) |

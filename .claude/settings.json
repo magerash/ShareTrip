@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3 tools/wiki/*)",
+      "Bash(node tools/wiki/py.mjs*)",
+      "Bash(npm test*)",
+      "Bash(npm run*)",
       "Bash(git status*)",
       "Bash(git diff*)",
       "Bash(git log*)",
@@ -27,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PROJECT_DIR}/tools/wiki/hook_preflight.py\"",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/tools/wiki/py.mjs\" hook_preflight.py",
             "timeout": 20
           }
         ]
@@ -39,12 +41,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PROJECT_DIR}/tools/wiki/hook_guard.py\"",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/tools/wiki/py.mjs\" hook_guard.py",
             "timeout": 10
           },
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PROJECT_DIR}/tools/wiki/hook_gate.py\"",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/tools/wiki/py.mjs\" hook_gate.py",
             "timeout": 60,
             "statusMessage": "Checking the wiki before the commit..."
           }
@@ -57,7 +59,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PROJECT_DIR}/tools/wiki/hook_caps.py\"",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/tools/wiki/py.mjs\" hook_caps.py",
             "timeout": 10
           }
         ]

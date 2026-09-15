@@ -49,6 +49,7 @@ node infra/serve.mjs --host 0.0.0.0  # видно с телефона в той 
 > IndexedDB на схеме `file://`. Нужен http.
 
 Постоянный адрес в домашней сети и выкладка на VPS — [docs/deploy.md](docs/deploy.md).
+Разворачиваете на домашнем компьютере впервые — [docs/handoff-jonsbo.md](docs/handoff-jonsbo.md).
 
 ## ⚠️ Общий адрес ≠ общие данные
 
