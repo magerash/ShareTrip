@@ -18,7 +18,7 @@ echo.
 echo   Запускаю ShareTrip... Браузер откроется сам.
 echo.
 
-start "" http://localhost:8080
+start "" http://localhost:8765
 node infra\serve.mjs
 
 pause

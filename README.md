@@ -38,7 +38,7 @@
 **Всё остальное:**
 
 ```bash
-node infra/serve.mjs                 # http://localhost:8080
+node infra/serve.mjs                 # http://localhost:8765
 node infra/serve.mjs --host 0.0.0.0  # видно с телефона в той же сети
 ```
 

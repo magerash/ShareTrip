@@ -1,6 +1,6 @@
 // infra/serve.mjs — статический сервер для ShareTrip.
 //
-//   node infra/serve.mjs                 → http://localhost:8080, только этот компьютер
+//   node infra/serve.mjs                 → http://localhost:8765, только этот компьютер
 //   node infra/serve.mjs --host 0.0.0.0  → видно с телефона в той же сети
 //   node infra/serve.mjs --port 9000
 //
@@ -26,7 +26,10 @@ const flag = (name, fallback) => {
   return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
 };
 
-const PORT = Number(flag('port', process.env.PORT || 8080));
+// 8765, а не 8080. 8080 — самый занятый порт на любой рабочей машине: на нём
+// сидят панели, прокси и боты. Заняв его, мы увели адрес у чужого сервиса, и
+// человек вместо своего бота увидел ShareTrip (D-017).
+const PORT = Number(flag('port', process.env.PORT || 8765));
 const HOST = flag('host', process.env.HOST || '127.0.0.1');
 
 const TYPES = {
